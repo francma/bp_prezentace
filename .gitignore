@@ -1,0 +1,12 @@
+*.pdf
+*.pdf_tex
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+/node_modules
+sequence-diagram.svg
+_minted*

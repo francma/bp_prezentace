@@ -1,0 +1,15 @@
+msc {
+  "tým","SCM", "CI", "produkce";
+  
+  "tým"=>"SCM"[label="upload"];
+  "SCM"=>"CI"[label="bump"];
+  "CI"=>"tým"[label="neúspěch",linecolor=red,textcolor=red];
+  
+  "tým"=>"SCM"[label="upload"];
+  "SCM"=>"CI"[label="bump"];
+  "CI"=>"produkce"[label="bump"];
+  
+  "produkce"=>"CI"[label="úspěch",linecolor=green,textcolor=green];
+  "CI"=>"tým"[label="úspěch",linecolor=green,textcolor=green];
+}
+
