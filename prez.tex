@@ -1,15 +1,14 @@
-% arara: xelatex: { shell: yes }
 \documentclass{beamer}
 
 \usepackage[czech]{babel}
 \usepackage[utf8]{inputenc}
+\usepackage{transparent}
 \usepackage{pgfplots}
 \usepackage{svg}
 \usepackage{minted}
 
 \newminted{yaml}{
 	fontsize=\footnotesize, 
-	gobble=4,
 	frame=lines,
 	bgcolor=bg,
 	framesep=3mm
@@ -22,8 +21,8 @@
 \usepgfplotslibrary{dateplot}
 
 \usetheme{metropolis}
-\title{Systém kontinuální integrace (CI system)}
-\date{\today}
+\title{Minimalistický CI systém}
+\date{}
 \author{Autor: Martin Franc \\ Vedoucí práce: Ing. Jakub Jirůtka \\}
 % \institute{FIT ČVUT}
 
@@ -36,164 +35,139 @@
 
 \defverbatim[colored]\exampleCode{
 \begin{yamlcode}
-    before_script:
-        - apt-get update && apt-get install php composer
-        - php -v
-        - composer install
-
-    check-syntax:
-        script:
-            - parallel-lint .
-
-    check-coding-style:
-        script:
-            - phpcs --standard=ruleset.xml
+stages:
+  - first
+  - second
+jobs:
+  job1:
+    env:
+      test: "1"
+    stage: first
+    image: "alpine/3.5"
+    commands:
+      - apk update && apk add python
+      - python -c 'print("Hello!")'
+    when: "PIPER_BRANCH == 'master'"
+    after_failure:
+      - cat /logs/piper
 \end{yamlcode}
 }
 
 
-	\maketitle
+\maketitle
 
-	\begin{frame}{Úvod}
-		\begin{block}{Kontinuální integrace}
-			Technika vývoje softwaru při které jednotliví vývojáři často integrují kód s ostatními, obvykle alespoň jednou za den.
-			Každá taková integrace kódu je kontrolována systémem pomocí automatizovaných testů, které detekují možné chyby.
-			% http://martinfowler.com/articles/continuousIntegration.html
-		\end{block}
-		
-		Pod automatizovanými testy si lze představit:
-		\begin{itemize}
-			\item Test syntaktické správnosti
-			\item Coding style test
-			\item Integrační a unit testy
-		\end{itemize}
-	\end{frame}
+% Cíle, motivace, rešerše, analýza, návrh, řešení, testování, souhrn udělané práce. Motivace a rešerše nemusí být, návrh a řešení lze nějak sjednotit. Víc obrázku s popisama, text v bodech. Co nejméně prázdných míst na slajdu.
 
-	\begin{frame}{Systém kontinuální integrace}
-		Systém kontinuální integrace si lze definovat jako množinu softwaru, která dokáže realizovat následující úkony:
+\begin{frame}{Zadání}
+\begin{block}{Cíle}
+Navrhnout a implementovat minimalistický CI (Continuous Integration) systém vhodný pro
+menší komunitní projekty.
+\end{block}
+\begin{itemize}
+	\item Modulární podporu pro různá běhová prostředí,
+	\item konfiguraci projektu pomocí textového souboru v repozitáři daného projektu,
+	\item možnost paralelizace v rámci jedné úlohy,
+	\item terminálové (přes SSH) a webové rozhraní,
+	\item snadnou rozšiřitelnost a integraci na další systémy
+\end{itemize}
+\end{frame}
 
-		\begin{enumerate}
-			\item Naslouchej změnám v repozitáři verzovacího systému
-			\item Stáhni zdrojové soubory projektu
-			\item Připrav běhové prostředí na základě konfigurace projektu
-			\item Sestav stáhnutý projekt
-			\item Spusť testy podle zadání projektu
-			\item Informuj výsledku testovaní
-		\end{enumerate}
-	\end{frame}
+\begin{frame}{Analýza existujících řešení}
+\begin{columns}[T,onlytextwidth]
+\column{0.8\textwidth}
+	Travis CI:
+	\begin{itemize}
+		\item \uv{Hostovaná} služba.
+		\item Spjatý s GitHubem.
+	\end{itemize}
+	Gitlab CI:
+	\begin{itemize}
+		\item Správce projektů i CI systém.
+		\item \uv{Self-hosted} i \uv{hosted}.
+	\end{itemize}
+	Buildbot:
+	\begin{itemize}
+		\item Framework.
+	\end{itemize}
+\column{0.2\textwidth}
+ 	\vbox to .6\paperheight{
+ 	\vfill
+	\includesvg[width = 40pt]{travis-logo}
+	\vfill
+	\hbox{\hbox to 10pt{}\includesvg[width = 40pt]{gitlab-logo}}
+	\vfill
+	\includesvg[width = 40pt]{buildbot-logo}
+	\vfill
+	}
+\end{columns}
+\end{frame}
 
-	\begin{frame}{CI -- workflow}
-		\begin{figure}
-			\vbox to \vsize {
-				\vfill
-				\includesvg[width=\textwidth]{sequence-diagram}
-				\vfill
-			}
-		\end{figure}
-	\end{frame}
+\begin{frame}{Návrh}
+Návrh systému se řídil následující pravidly:
+\begin{itemize}
+	\item REST architektura,
+	\item KISS a UNIX filosofie,
+	\item programovací jazyk Python 3.5+ a framework Flask,
+	\item konfigurace integrace ve formátu YAML,
+	\item LXD běhové prostředí.
+\end{itemize}
+\end{frame}
 
-	\begin{frame}{CI -- běhová prostředí}
-		\bigskip\bigskip
-		
-		\begin{columns}[T,onlytextwidth]
-			\column{0.8\textwidth}
-				Shell:
-				\begin{itemize}
-					\item Problémy s bezpečností a úklidem
-				\end{itemize}
-				Virtuální stroje:
-				\begin{itemize}
-					\item Kompletní odstínění od systému
-					\item Nároky na systémové prostředky
-				\end{itemize}
-				Kontejnery:
-				\begin{itemize}
-					\item Nutná podpora ze strany operačního systému
-					\item Rychlost a alokace pouze potřebných sytémvých prostředků
-				\end{itemize}
-			\column{0.2\textwidth}
-				\vbox to 40pt{}
-				\includesvg[width = 50pt]{virtualbox-logo}
-				\includesvg[width = 80pt]{docker-logo}
-		\end{columns}
-		
-	\end{frame}
+\begin{frame}{Architektura systému}
+	\hfill
+	\includegraphics[height=.8\paperheight]{img/architektura_piper.pdf}
+	\hfill
+\end{frame}
 
-	\begin{frame}{CI -- ukázková konfigurace projektu (YAML)}
-		\exampleCode
-	\end{frame}
+\begin{frame}{Architektura jádra systému}
+	\hfill
+	\includegraphics[width=.88\paperwidth]{img/core.pdf}
+	\hfill
+\end{frame}
 
-	\begin{frame}{Cíle práce}
-		Rešeršní:
-		\begin{itemize}
-			\item Úvod do techniky kontinuální integrace
-			\item Porovnání existujících řešení
-		\end{itemize}
-		
-		Vytvoření minimalistického CI systému splňující následující body:
-		\begin{itemize}
-			\item Modulární podpora pro různá běhová prostředí
-			\item Konfigurace projektu pomocí textového souboru v repozitáři
-			\item Možnost paralelizace úlohy v rámci jedné úlohy
-			\item Správa projektů přes terminálové rozhraní (SSH)
-			\item Sledování stavu aktuálních i minulých úloh pomocí webového a terminálového rozhraní
-		\end{itemize}
+\begin{frame}{Testování}
+\begin{itemize}
+	\item Integrační a jednotkové testy s nástroji Tox a pytest.
+	\item Mock u webového rozhraní.
+	\item Použití kontinuální integrace při vývoji.
+\end{itemize}
+\begin{figure}
+\includegraphics[width=150pt]{img/piper-ci-badges.png}
+\caption{Ikonky na GitHubu}
+\end{figure}
+\end{frame}
 
-	\end{frame}
+\begin{frame}{Ukázka konfigurace integrace}
+	\exampleCode{}
+\end{frame}
 
-	\begin{frame}{Existující řešení}
-		\begin{columns}[T,onlytextwidth]
-			\column{0.8\textwidth}
-				Travis:
-				\begin{itemize}
-					\item Hostovaná služba
-					\item Konfugurace přímo v projektu
-				\end{itemize}
-				Jenkins:
-				\begin{itemize}
-					\item Nutný vlastní server
-					\item Vytváření tzv. \uv{Jobs}
-					\item Velké množství pluginů
-				\end{itemize}
-				Buildbot:
-				\begin{itemize}
-					\item Framework umožňující škálovatelnost
-				\end{itemize}
-			\column{0.2\textwidth}
-				\includesvg[width = 50pt]{travis-logo}
-				\bigskip
+\begin{frame}{Výsledek práce}
+\begin{itemize}
+	\item Rešerše existujících řešení.
+	\item Modularita pomocí HTTP API.
+	\item Minimálnost je dosažena KISS a UNIX.
+	\item Sledování stavu integrací a administrace systému v terminálovém rozhraní.
+	\item Sledování stavu integrací ve webovém rozhraní.
+	\item Různá běhová prostředí.
+	\item Paralelizace v rámci fáze.
+\end{itemize}
+\end{frame}
 
-				\includesvg[width = 50pt]{jenkins-logo}
-		\end{columns}
-	\end{frame}
+\begin{frame}{Přínosy práce}
+\begin{itemize}
+	\item 1k LoC.
+	\item Minimální počet závislostí.
+	\item Nízké požadavky na systémové prostředky.
+	\item LXD běhové prostředí.
+	\item Autentizace pomocí asymetrických klíčů.
+	\item CLI jako \uv{first-class citizen}.
+\end{itemize}
+\end{frame}
 
-	\begin{frame}{Zvolené řešení}
-		\begin{itemize}
-			\item Implementace v jazyce Python 3.5 a vyšší
-			\item Konfigurace projektu pomocí YAML soubory uvnitř projektu
-			\item Webové a API (REST) rozhraní pomocí frameworku Flask
-			\item Sledování stavu ůlohy v realném čase pomocí WebSocket spojení
-			\item Hlavní běhové prostředí nativní Linuxové kontejnery LXC
-			\item Vývoj pokrytý automatizovanými testy (CI?)
-		\end{itemize}
-	\end{frame}
-
-	\begin{frame}[standout]
-		Motivace?	
-	\end{frame}
-
-	\begin{frame}{Zdroje}
-		[1] DUVALL, Paul M., Steve MATYAS a Andrew GLOVER. Continuous integration: improving software quality and reducing risk. Upper Saddle River, NJ: Addison-Wesley, c2007. ISBN 0321336380.
-	
-		[2] Koutný, Jiří. Vy ještě nepoužíváte Continuous Integration? zdroják.cz. [online]. 3. 2. 2015 [cit. 2016-11-29]. Dostupné z: https://www.zdrojak.cz/clanky/vy-jeste-nepouzivate-continuous-integration/
-	
-		[3] FOWLER, Martin. Continuous Integration. Martin Fowler. [online]. 1.5.2006 [cit. 2016-11-30]. Dostupné z: http://www.martinfowler.com/articles/continuousIntegration.html
-	\end{frame}
-
-	\begin{frame}[standout]
-		Děkuji za pozornost. \\
-		\bigskip\bigskip\bigskip
-		Otázky?
-	\end{frame}
+\begin{frame}[standout]
+	Děkuji za pozornost. \\
+	\bigskip\bigskip\bigskip
+	Otázky?
+\end{frame}
 
 \end{document}

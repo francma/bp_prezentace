@@ -1,0 +1,32 @@
+dist: trusty
+sudo: required
+language: generic
+
+before_script:
+  - sudo add-apt-repository --yes ppa:ubuntu-lxc/stable
+  - sudo apt-get -qq update
+  - sudo apt-get install --yes lxc
+  - sudo lxc-create -n arch -t download -- --dist archlinux --release current --arch amd64
+  - echo "lxc.mount.entry = $PWD travis none bind,create=dir 0 0" | sudo tee --append /var/lib/lxc/arch/config
+  - sudo lxc-start -dn arch
+  - sudo lxc-wait -n arch -s RUNNING
+  - sleep 10
+
+script:
+  - sudo lxc-attach -n arch -- pacman -Syu --noconfirm
+  - sudo lxc-attach -n arch -- pacman -S --noconfirm texlive-core texlive-pictures texlive-latexextra inkscape pygmentize make
+  - sudo lxc-attach -n arch -- bash -c 'cd /travis && make'
+  - sudo lxc-attach -n arch -- bash -c 'cd /travis && mv prez.pdf $(date +"BP_prezentace_Franc_Martin_%Y-%m-%d_%H:%M_$TRAVIS_COMMIT.pdf")'
+
+before_deploy:
+  - export RELEASE_FILE=$(ls BP_prezentace_Franc_Martin_*.pdf)
+
+deploy:
+  name: "Prezentace"
+  provider: releases
+  api_key: "${GH_TOKEN}"
+  file: "$RELEASE_FILE"
+  skip_cleanup: true
+  overwrite: true
+  on:
+    branch: master
