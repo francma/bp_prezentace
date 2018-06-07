@@ -10,3 +10,4 @@
 /node_modules
 sequence-diagram.svg
 _minted*
+package-lock.json
