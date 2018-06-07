@@ -2,7 +2,9 @@ FILE=prez
 
 $(FILE).pdf: $(FILE).tex ./img/sequence-diagram.svg
 	arara $(FILE).tex
-	# pdflatex $(FILE).tex
+
+run: $(FILE).pdf
+	xdg-open $(FILE).pdf
 
 clean:
 	find .  -maxdepth 1 -type f -regex '\(.*\.pdf\|.*\.pdf_tex\|.*\.aux\|.*\.log\|.*\.nav\|.*\.out\|.*\.snm\|.*\.toc\)' -delete
