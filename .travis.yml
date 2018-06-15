@@ -24,7 +24,8 @@ before_deploy:
 deploy:
   name: "Prezentace"
   provider: releases
-  api_key: "${GH_TOKEN}"
+  api_key:
+    secure: OVFi1L2QDKkhYOdbOb//YJJnitFzYFPx6Dkls3SB4V4/oWHO1nYaRkmCfnU0S6WyrtM2ON/WOR/dnRq7wC0LzpclJOMzgxKAV+11CG5PtMpIroyIdr6SC9Tz7Ho+zpBGp34XKF8c18WbSuzdwCs9BQPFJw7faamHSZsUUvrIYXKGRSIQhELPhzRNlItGThaLWq5IbztpJLVauos8TKazufDQPW6L+eQZJDFuIQWuWELCiOMiS9TJ4hDgS1dX7WRNM9/OiIKbJ5wa7jVWXt+oCltcodNpIMhCTQj4EBlwthSQaipJzEaGZ7Hcg2YAG4J+lgO/0THjwFyNp9tEX997u6E1o9PvZCezN8K6XVOOjqnL2wu0RGvclLBkTZOoaijl+UDNQ6xOWyS+wOaSLVtwtSUZQkH4sAcLUmHKnJ/wNxJCA7P9G9Knb0GaDJNzuL5sHYUtufSEqe7Pfpst71CLrvnBIjoSbm1g/8IK3uW7NzPCHUafjZj0ENDCi/kcst/rqEdtFSxYji3wxLiJu798NYLb0BZshPLT6mHHI0t9Ydqf8cYlW+SBvrVWEIeECk1oUWPyPAMVpAloBorKTWJSmEYypM9pN4LMOaonIYIR/x3UYZ0wQfXYnOM/Rrw7zj8qROBnWgKtWD+QW7qkWHfVLJ6TY5LVSB0QdT4S/WBoiRM=
   file: "$RELEASE_FILE"
   skip_cleanup: true
   overwrite: true
