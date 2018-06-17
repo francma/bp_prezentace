@@ -1,6 +1,7 @@
 *.pdf
 !/img/architektura_piper.pdf
 !/img/core.pdf
+!/img/entity_piper.pdf
 *.pdf_tex
 *.aux
 *.log
