@@ -2,6 +2,7 @@ FILE=prez
 
 $(FILE).pdf: $(FILE).tex
 	xelatex -shell-escape -halt-on-error $(FILE).tex
+	xelatex -shell-escape -halt-on-error $(FILE).tex
 
 run: $(FILE).pdf
 	xdg-open $(FILE).pdf
