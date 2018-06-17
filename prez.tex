@@ -45,11 +45,11 @@ jobs:
     stage: first
     image: "alpine/3.5"
     commands:
-      - apk update && apk add python
-      - python -c 'print("Hello!")'
+      - apk update && apk add python python-tox
+      - tox -e py36
     when: "PIPER_BRANCH == 'master'"
     after_failure:
-      - cat /logs/piper
+      - cat build.log
 \end{yamlcode}
 }
 
@@ -61,7 +61,7 @@ jobs:
 \begin{frame}{Zadání}
 \begin{block}{Cíle}
 Navrhnout a implementovat minimalistický CI (Continuous Integration) systém vhodný pro
-menší komunitní projekty.
+menší komunitní projekty a porovnat existující řešení.
 \end{block}
 \begin{itemize}
 	\item Modulární podporu pro různá běhová prostředí,
@@ -106,7 +106,7 @@ menší komunitní projekty.
 Návrh systému se řídil následující pravidly:
 \begin{itemize}
 	\item REST architektura,
-	\item KISS a UNIX filosofie,
+	\item KISS a Unix filosofie,
 	\item programovací jazyk Python 3.5+ a framework Flask,
 	\item konfigurace integrace ve formátu YAML,
 	\item LXD běhové prostředí.
@@ -122,6 +122,12 @@ Návrh systému se řídil následující pravidly:
 \begin{frame}{Architektura jádra systému}
 	\hfill
 	\includegraphics[width=.88\paperwidth]{img/core.pdf}
+	\hfill
+\end{frame}
+
+\begin{frame}{Entity}
+	\hfill
+	\includegraphics[height=.8\paperheight]{img/entity_piper.pdf}
 	\hfill
 \end{frame}
 
@@ -145,7 +151,7 @@ Návrh systému se řídil následující pravidly:
 \begin{itemize}
 	\item Rešerše existujících řešení.
 	\item Modularita pomocí HTTP API.
-	\item Minimálnost je dosažena KISS a UNIX.
+	\item Minimálnost je dosažena KISS filosofií.
 	\item Sledování stavu integrací a administrace systému v terminálovém rozhraní.
 	\item Sledování stavu integrací ve webovém rozhraní.
 	\item Různá běhová prostředí.
@@ -159,15 +165,14 @@ Návrh systému se řídil následující pravidly:
 	\item Minimální počet závislostí.
 	\item Nízké požadavky na systémové prostředky.
 	\item LXD běhové prostředí.
+	\item Instalace přes Pip.
 	\item Autentizace pomocí asymetrických klíčů.
 	\item CLI jako \uv{first-class citizen}.
 \end{itemize}
 \end{frame}
 
 \begin{frame}[standout]
-	Děkuji za pozornost. \\
-	\bigskip\bigskip\bigskip
-	Otázky?
+	Děkuji za pozornost.
 \end{frame}
 
 \end{document}
